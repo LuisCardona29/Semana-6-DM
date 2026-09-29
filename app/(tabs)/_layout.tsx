@@ -1,13 +1,47 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { Text } from 'react-native';
 
 export default function TabsLayout() {
-  return <Tabs screenOptions={({ route }) => ({ headerShown: false, tabBarActiveTintColor: '#53664D', tabBarInactiveTintColor: '#8B8B84', tabBarStyle: { height: 68, paddingTop: 7, borderTopColor: '#E6E4DE', backgroundColor: '#FCFCFA' }, tabBarLabelStyle: { fontWeight: '700', fontSize: 11 }, tabBarIcon: ({ color, focused }) => {
-    const icons: Record<string, keyof typeof Ionicons.glyphMap> = { index: focused ? 'home' : 'home-outline', routes: focused ? 'navigate' : 'navigate-outline', pass: focused ? 'card' : 'card-outline' };
-    return <Ionicons name={icons[route.name]} size={22} color={color} />;
-  } })}>
-    <Tabs.Screen name="index" options={{ title: 'Inicio' }} />
-    <Tabs.Screen name="routes" options={{ title: 'Rutas' }} />
-    <Tabs.Screen name="pass" options={{ title: 'Mi pase' }} />
-  </Tabs>;
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#ff6b3d',
+        tabBarInactiveTintColor: '#7b8190',
+        tabBarStyle: {
+          backgroundColor: '#ffffff',
+          borderTopWidth: 0,
+          height: 74,
+          paddingBottom: 10,
+          paddingTop: 8,
+          shadowColor: '#000',
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: -4 },
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Inicio',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>{'🏠'}</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="routes"
+        options={{
+          title: 'Rutas',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>{'🧭'}</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="pass"
+        options={{
+          title: 'Mi pase',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>{'🎫'}</Text>,
+        }}
+      />
+    </Tabs>
+  );
 }

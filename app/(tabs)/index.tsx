@@ -1,22 +1,331 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-const shuttles = [
-  { route: 'Ruta Norte', arrival: '3 min', stop: 'Biblioteca Central', status: 'En camino', color: '#667A5E' },
-  { route: 'Ruta Centro', arrival: '8 min', stop: 'Plaza principal', status: 'Próxima salida', color: '#8B704D' },
+type Shuttle = {
+  id: string;
+  name: string;
+  route: string;
+  pickup: string;
+  nextStop: string;
+  eta: string;
+  status: 'En tránsito' | 'Listo' | 'A tiempo';
+  accent: string;
+  avatar: string;
+};
+
+const shuttleList: Shuttle[] = [
+  {
+    id: '1',
+    name: 'Ana García',
+    route: 'Línea Central',
+    pickup: 'Terminal norte',
+    nextStop: 'Plaza Mayor',
+    eta: '7 min',
+    status: 'En tránsito',
+    accent: '#ff6b3d',
+    avatar: 'AG',
+  },
+  {
+    id: '2',
+    name: 'Mateo Ruiz',
+    route: 'Campus Sur',
+    pickup: 'Parque del Sol',
+    nextStop: 'Estación 2',
+    eta: '12 min',
+    status: 'Listo',
+    accent: '#3b82f6',
+    avatar: 'MR',
+  },
+  {
+    id: '3',
+    name: 'Sofía Vega',
+    route: 'Línea Este',
+    pickup: 'Mercado',
+    nextStop: 'Biblioteca',
+    eta: '9 min',
+    status: 'A tiempo',
+    accent: '#10b981',
+    avatar: 'SV',
+  },
+  {
+    id: '4',
+    name: 'Lucas Pérez',
+    route: 'Ronda del Valle',
+    pickup: 'Calle Real',
+    nextStop: 'Centro de salud',
+    eta: '15 min',
+    status: 'En tránsito',
+    accent: '#8b5cf6',
+    avatar: 'LP',
+  },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
-  return <ScrollView style={s.screen} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-    <View style={s.top}><View><Text style={s.greeting}>MARTES, 17 DE MARZO</Text><Text style={s.title}>Buenos días, Sofía.</Text></View><Pressable onPress={() => router.push('/modal')} accessibilityLabel="Ver alertas" style={s.notification}><Ionicons name="notifications-outline" size={21} color="#292A27" /><View style={s.notificationDot} /></Pressable></View>
-    <Pressable onPress={() => router.push('/(tabs)/routes')} style={s.destination}><View style={s.destinationIcon}><Ionicons name="location-outline" size={20} color="#53664D" /></View><View><Text style={s.destinationLabel}>PRÓXIMO DESTINO</Text><Text style={s.destinationText}>Buscar una parada o edificio</Text></View><Ionicons name="arrow-forward" size={18} color="#93948D" /></Pressable>
-    <View style={s.heading}><Text style={s.sectionTitle}>Tu próximo viaje</Text><Text style={s.live}>● ACTUALIZADO</Text></View>
-    {shuttles.map((bus, index) => <Pressable key={bus.route} onPress={() => router.push('/(tabs)/routes')} style={[s.tripCard, index === 0 && s.tripCardFeatured]}><View style={[s.busMark, { backgroundColor: `${bus.color}18` }]}><Ionicons name="bus-outline" size={23} color={bus.color} /></View><View style={s.tripInfo}><Text style={s.route}>{bus.route}</Text><Text style={s.stop}>{bus.stop}</Text><View style={s.status}><View style={[s.statusDot, { backgroundColor: bus.color }]} /><Text style={s.statusText}>{bus.status}</Text></View></View><View><Text style={s.arrival}>{bus.arrival}</Text><Text style={s.arrivalLabel}>para llegar</Text></View></Pressable>)}
-    <Text style={[s.sectionTitle, s.actionsTitle]}>Explora RouteGo</Text><View style={s.actions}><QuickAction icon="map-outline" label="Rutas" onPress={() => router.push('/(tabs)/routes')} /><QuickAction icon="card-outline" label="Mi pase" onPress={() => router.push('/(tabs)/pass')} /><QuickAction icon="person-outline" label="Perfil" onPress={() => router.push('/student/ST-202688')} /></View>
-    <View style={s.eco}><View style={s.ecoIcon}><Ionicons name="leaf-outline" size={21} color="#53664D" /></View><View style={{ flex: 1 }}><Text style={s.ecoTitle}>Movilidad sostenible</Text><Text style={s.ecoText}>Esta semana viajaste 4 veces en shuttle.</Text></View><Ionicons name="chevron-forward" size={17} color="#93948D" /></View>
-  </ScrollView>;
+  const [search, setSearch] = useState('');
+  const [clock, setClock] = useState('07:42');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setClock(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 30000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const filteredShuttles = useMemo(() => {
+    return shuttleList.filter((item) => {
+      const target = `${item.name} ${item.route} ${item.nextStop}`.toLowerCase();
+      return target.includes(search.toLowerCase());
+    });
+  }, [search]);
+
+  return (
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.eyebrow}>RutaGo</Text>
+            <Text style={styles.title}>Próximos shuttles</Text>
+          </View>
+          <View style={styles.clockBox}>
+            <Text style={styles.clock}>{clock}</Text>
+          </View>
+        </View>
+
+        <View style={styles.searchBox}>
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Buscar personas, rutas o paradas"
+            placeholderTextColor="#8b95a9"
+            style={styles.input}
+          />
+        </View>
+
+        <Pressable style={styles.alertCard} onPress={() => router.push('/modal' as never)}>
+          <View>
+            <Text style={styles.alertLabel}>Estado del servicio</Text>
+            <Text style={styles.alertTitle}>Todo operativo</Text>
+            <Text style={styles.alertText}>Sin incidencias en la red de transporte.</Text>
+          </View>
+          <Text style={styles.alertIcon}>→</Text>
+        </Pressable>
+
+        <View style={styles.sectionRow}>
+          <Text style={styles.sectionTitle}>En ruta</Text>
+          <Text style={styles.sectionMeta}>{filteredShuttles.length} activos</Text>
+        </View>
+
+        {filteredShuttles.map((item) => (
+          <Pressable
+            key={item.id}
+            style={styles.card}
+            onPress={() => router.push({ pathname: '/student/[id]' as never, params: { id: item.id } } as never)}
+          >
+            <View style={[styles.avatar, { backgroundColor: `${item.accent}22` }]}>
+              <Text style={[styles.avatarText, { color: item.accent }]}>{item.avatar}</Text>
+            </View>
+
+            <View style={styles.cardBody}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={[styles.status, { backgroundColor: `${item.accent}22`, color: item.accent }]}>{item.status}</Text>
+              </View>
+
+              <Text style={styles.route}>{item.route}</Text>
+              <Text style={styles.meta}>Recogida: {item.pickup}</Text>
+              <Text style={styles.meta}>Siguiente parada: {item.nextStop}</Text>
+
+              <View style={styles.footerRow}>
+                <Text style={styles.eta}>{item.eta}</Text>
+                <Text style={styles.link}>Ver detalle</Text>
+              </View>
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
 }
-function QuickAction({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) { return <Pressable onPress={onPress} style={s.action}><Ionicons name={icon} size={22} color="#454640" /><Text style={s.actionLabel}>{label}</Text></Pressable>; }
-const s = StyleSheet.create({ screen: { flex: 1, backgroundColor: '#F7F7F4' }, content: { padding: 20, paddingTop: 58, paddingBottom: 30 }, top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 25 }, greeting: { color: '#898A83', fontSize: 10, fontWeight: '800', letterSpacing: 1.1 }, title: { color: '#292A27', fontSize: 26, fontWeight: '700', marginTop: 6, letterSpacing: -.4 }, notification: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: '#E3E1DB', backgroundColor: '#FCFCFA', alignItems: 'center', justifyContent: 'center' }, notificationDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#B76C47', position: 'absolute', top: 9, right: 9 }, destination: { backgroundColor: '#ECEAE4', borderRadius: 16, padding: 15, flexDirection: 'row', gap: 11, alignItems: 'center', marginBottom: 30 }, destinationIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F8F7F3', alignItems: 'center', justifyContent: 'center' }, destinationLabel: { color: '#8B8B84', fontSize: 10, fontWeight: '800', letterSpacing: .8 }, destinationText: { color: '#454640', fontWeight: '600', marginTop: 3, fontSize: 13 }, heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 11 }, sectionTitle: { color: '#292A27', fontWeight: '700', fontSize: 17 }, live: { color: '#687463', fontSize: 9, fontWeight: '800', letterSpacing: .6 }, tripCard: { backgroundColor: '#FCFCFA', borderRadius: 17, padding: 15, flexDirection: 'row', alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#E7E5DF' }, tripCardFeatured: { borderColor: '#D5D7CE' }, busMark: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 12 }, tripInfo: { flex: 1 }, route: { color: '#292A27', fontSize: 15, fontWeight: '700' }, stop: { color: '#81827B', fontSize: 12, marginTop: 3 }, status: { flexDirection: 'row', gap: 5, alignItems: 'center', marginTop: 7 }, statusDot: { width: 6, height: 6, borderRadius: 3 }, statusText: { color: '#6B6C66', fontSize: 11, fontWeight: '600' }, arrival: { color: '#292A27', fontSize: 19, fontWeight: '700', textAlign: 'right' }, arrivalLabel: { color: '#92938C', fontSize: 10, textAlign: 'right' }, actionsTitle: { marginTop: 20, marginBottom: 12 }, actions: { flexDirection: 'row', gap: 9 }, action: { flex: 1, minHeight: 82, borderRadius: 15, backgroundColor: '#FCFCFA', alignItems: 'center', justifyContent: 'center', gap: 7, borderWidth: 1, borderColor: '#E7E5DF' }, actionLabel: { color: '#555650', fontSize: 11, fontWeight: '700' }, eco: { marginTop: 24, backgroundColor: '#E6E9E2', borderRadius: 16, padding: 14, flexDirection: 'row', gap: 11, alignItems: 'center' }, ecoIcon: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#F4F6F1', alignItems: 'center', justifyContent: 'center' }, ecoTitle: { color: '#3E4F39', fontWeight: '700', fontSize: 13 }, ecoText: { color: '#65705E', fontSize: 11, marginTop: 3 } });
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#f5f7fb',
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 100,
+    gap: 18,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  eyebrow: {
+    color: '#ff6b3d',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  title: {
+    marginTop: 6,
+    color: '#121a2b',
+    fontSize: 30,
+    fontWeight: '800',
+  },
+  clockBox: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  clock: {
+    color: '#121a2b',
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  searchBox: {
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  input: {
+    color: '#111827',
+    fontSize: 15,
+    paddingVertical: 12,
+  },
+  alertCard: {
+    backgroundColor: '#141a2a',
+    borderRadius: 22,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  alertLabel: {
+    color: '#d7dff2',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  alertTitle: {
+    marginTop: 8,
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  alertText: {
+    marginTop: 6,
+    color: '#eaf0ff',
+    fontSize: 13,
+  },
+  alertIcon: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  sectionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    color: '#121a2b',
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  sectionMeta: {
+    color: '#6b7280',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 22,
+    padding: 16,
+    flexDirection: 'row',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+  },
+  avatar: {
+    width: 58,
+    height: 58,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  cardBody: {
+    flex: 1,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+  },
+  name: {
+    color: '#121a2b',
+    fontSize: 18,
+    fontWeight: '800',
+    flexShrink: 1,
+  },
+  status: {
+    fontSize: 10,
+    fontWeight: '800',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  route: {
+    marginTop: 8,
+    color: '#4b5565',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  meta: {
+    marginTop: 4,
+    color: '#6b7280',
+    fontSize: 12,
+  },
+  footerRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  eta: {
+    color: '#ff6b3d',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  link: {
+    color: '#ff6b3d',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+});

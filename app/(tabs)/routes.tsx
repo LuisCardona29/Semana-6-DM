@@ -1,6 +1,158 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-const routes = [{ name: 'Ruta Norte', stops: 'Biblioteca · Ingeniería · Campus Norte', next: '3 min', occupancy: 'Ocupación media', color: '#667A5E' }, { name: 'Ruta Centro', stops: 'Rectoría · Plaza principal · Deportes', next: '8 min', occupancy: 'Asientos disponibles', color: '#8B704D' }, { name: 'Ruta Sur', stops: 'Medicina · Residencias · Parqueadero', next: '12 min', occupancy: 'Ocupación alta', color: '#A46248' }];
-export default function RoutesScreen() { const [query, setQuery] = useState(''); const filtered = routes.filter(x => `${x.name} ${x.stops}`.toLowerCase().includes(query.toLowerCase())); return <ScrollView style={s.screen} contentContainerStyle={s.content}><Text style={s.eyebrow}>MOVILIDAD UNIVERSITARIA</Text><Text style={s.title}>Rutas</Text><Text style={s.subtitle}>Consulta tiempos, paradas y ocupación.</Text><View style={s.search}><Ionicons name="search-outline" size={19} color="#878880" /><TextInput value={query} onChangeText={setQuery} placeholder="Buscar parada o ruta" placeholderTextColor="#9B9B94" style={s.input} /></View><View style={s.map}><View style={s.road} /><View style={s.pinOne} /><View style={s.pinTwo} /><Ionicons name="bus" size={27} color="#4E6049" /><Text style={s.mapText}>3 vehículos activos en campus</Text></View><Text style={s.listTitle}>Rutas activas · {filtered.length}</Text>{filtered.map(route => <View key={route.name} style={s.card}><View style={[s.badge, { backgroundColor: `${route.color}18` }]}><Ionicons name="bus-outline" size={22} color={route.color} /></View><View style={{ flex: 1 }}><Text style={s.name}>{route.name}</Text><Text style={s.stops}>{route.stops}</Text><Text style={[s.occupancy, { color: route.color }]}>{route.occupancy}</Text></View><View><Text style={s.next}>{route.next}</Text><Text style={s.nextLabel}>para llegar</Text></View></View>)}</ScrollView>; }
-const s = StyleSheet.create({ screen: { flex: 1, backgroundColor: '#F7F7F4' }, content: { padding: 20, paddingTop: 58, paddingBottom: 28 }, eyebrow: { color: '#6B7864', fontSize: 10, letterSpacing: 1, fontWeight: '800' }, title: { color: '#292A27', fontSize: 27, fontWeight: '700', marginTop: 5 }, subtitle: { color: '#777870', marginTop: 5, fontSize: 13 }, search: { marginTop: 20, backgroundColor: '#FCFCFA', borderRadius: 14, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E3E1DB' }, input: { flex: 1, padding: 14, color: '#292A27' }, map: { height: 165, borderRadius: 18, backgroundColor: '#E5E7DF', marginVertical: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, road: { height: 11, width: '125%', backgroundColor: '#CED2C6', transform: [{ rotate: '-15deg' }], position: 'absolute', borderRadius: 10 }, pinOne: { position: 'absolute', top: 35, left: 58, width: 16, height: 16, backgroundColor: '#FCFCFA', borderWidth: 4, borderColor: '#667A5E', borderRadius: 8 }, pinTwo: { position: 'absolute', bottom: 41, right: 65, width: 16, height: 16, backgroundColor: '#FCFCFA', borderWidth: 4, borderColor: '#8B704D', borderRadius: 8 }, mapText: { position: 'absolute', bottom: 12, color: '#5E6759', fontSize: 11, fontWeight: '700' }, listTitle: { fontSize: 16, fontWeight: '700', color: '#292A27', marginBottom: 11 }, card: { backgroundColor: '#FCFCFA', borderRadius: 16, padding: 15, flexDirection: 'row', alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#E7E5DF' }, badge: { width: 46, height: 46, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 12 }, name: { fontWeight: '700', color: '#292A27', fontSize: 15, marginBottom: 3 }, stops: { color: '#777870', fontSize: 11, marginBottom: 5 }, occupancy: { fontSize: 11, fontWeight: '700' }, next: { color: '#292A27', fontSize: 16, fontWeight: '700', textAlign: 'right' }, nextLabel: { color: '#92938C', fontSize: 10 } });
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+
+type RouteInfo = {
+  id: string;
+  name: string;
+  corridor: string;
+  interval: string;
+  status: string;
+  active: boolean;
+};
+
+const routes: RouteInfo[] = [
+  { id: 'r1', name: 'Línea Central', corridor: 'Norte ↔ Centro', interval: 'Cada 8 min', status: 'Operativa', active: true },
+  { id: 'r2', name: 'Campus Sur', corridor: 'Parque ↔ Universidad', interval: 'Cada 12 min', status: 'Operativa', active: true },
+  { id: 'r3', name: 'Línea Este', corridor: 'Mercado ↔ Biblioteca', interval: 'Cada 10 min', status: 'Mantenimiento', active: false },
+  { id: 'r4', name: 'Ronda del Valle', corridor: 'Centro ↔ Salud', interval: 'Cada 15 min', status: 'Operativa', active: true },
+];
+
+export default function RoutesScreen() {
+  const [query, setQuery] = useState('');
+
+  const filteredRoutes = useMemo(() => {
+    return routes.filter((route) => `${route.name} ${route.corridor}`.toLowerCase().includes(query.toLowerCase()));
+  }, [query]);
+
+  return (
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.eyebrow}>Consulta</Text>
+        <Text style={styles.title}>Rutas disponibles</Text>
+
+        <View style={styles.searchBox}>
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Buscar corredor o línea"
+            placeholderTextColor="#8b95a9"
+            style={styles.input}
+          />
+        </View>
+
+        {filteredRoutes.map((route) => (
+          <View key={route.id} style={styles.card}>
+            <View style={styles.topRow}>
+              <Text style={styles.name}>{route.name}</Text>
+              <Text style={[styles.status, route.active ? styles.statusActive : styles.statusIdle]}>{route.status}</Text>
+            </View>
+
+            <Text style={styles.corridor}>{route.corridor}</Text>
+            <Text style={styles.interval}>{route.interval}</Text>
+
+            <Pressable style={styles.button}>
+              <Text style={styles.buttonText}>Ver detalles</Text>
+            </Pressable>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#f5f7fb',
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 100,
+    gap: 18,
+  },
+  eyebrow: {
+    color: '#ff6b3d',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  title: {
+    color: '#121a2b',
+    fontSize: 30,
+    fontWeight: '800',
+    marginTop: 4,
+  },
+  searchBox: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  input: {
+    color: '#111827',
+    fontSize: 15,
+    paddingVertical: 12,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 22,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  name: {
+    color: '#121a2b',
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  status: {
+    fontSize: 10,
+    fontWeight: '800',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  statusActive: {
+    backgroundColor: '#dcfce7',
+    color: '#15803d',
+  },
+  statusIdle: {
+    backgroundColor: '#fff7ed',
+    color: '#c2410c',
+  },
+  corridor: {
+    marginTop: 8,
+    color: '#4b5565',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  interval: {
+    marginTop: 6,
+    color: '#6b7280',
+    fontSize: 13,
+  },
+  button: {
+    marginTop: 16,
+    backgroundColor: '#ff6b3d',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '800',
+  },
+});

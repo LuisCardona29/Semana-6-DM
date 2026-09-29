@@ -1,6 +1,68 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-export default function ModalScreen() { return <View style={s.screen}><View style={s.icon}><Ionicons name="checkmark" size={40} color="#53664D" /></View><Text style={s.title}>Servicio operando</Text><Text style={s.subtitle}>Todas las rutas están activas. La Ruta Sur tiene alta demanda; considera la Ruta Centro como alternativa.</Text><View style={s.status}><View style={s.dot} /><Text style={s.statusText}>Actualizado hace menos de un minuto</Text></View><Link href="/" dismissTo asChild><Pressable style={s.button}><Text style={s.buttonText}>Entendido</Text></Pressable></Link></View>; }
-const s = StyleSheet.create({ screen: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, backgroundColor: '#F7F7F4' }, icon: { width: 78, height: 78, borderRadius: 39, backgroundColor: '#E6E9E2', alignItems: 'center', justifyContent: 'center' }, title: { color: '#292A27', fontSize: 25, fontWeight: '700', marginTop: 22 }, subtitle: { color: '#72736C', textAlign: 'center', lineHeight: 21, marginTop: 10 }, status: { marginTop: 24, padding: 13, borderRadius: 12, backgroundColor: '#ECEDE8', flexDirection: 'row', gap: 8, alignItems: 'center' }, dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#667A5E' }, statusText: { color: '#566250', fontWeight: '700', fontSize: 12 }, button: { backgroundColor: '#343630', borderRadius: 13, padding: 16, alignSelf: 'stretch', alignItems: 'center', marginTop: 28 }, buttonText: { color: '#F8F7F3', fontWeight: '800' } });
+export default function ModalScreen() {
+  const router = useRouter();
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.card}>
+        <Text style={styles.eyebrow}>Servicio</Text>
+        <Text style={styles.title}>Todo está operativo</Text>
+        <Text style={styles.text}>La red de shuttles funciona con normalidad, sin retrasos ni incidencias graves en este momento.</Text>
+
+        <Pressable style={styles.button} onPress={() => router.back()}>
+          <Text style={styles.buttonText}>Cerrar</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: 'rgba(17, 24, 39, 0.35)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 26,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  eyebrow: {
+    color: '#ff6b3d',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  title: {
+    marginTop: 8,
+    color: '#121a2b',
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  text: {
+    marginTop: 10,
+    color: '#4b5565',
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  button: {
+    marginTop: 22,
+    backgroundColor: '#121a2b',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '800',
+  },
+});

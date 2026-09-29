@@ -1,4 +1,112 @@
-import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
-export default function PassScreen() { return <View style={s.screen}><Text style={s.eyebrow}>ACCESO UNIVERSITARIO</Text><Text style={s.title}>Mi pase</Text><View style={s.pass}><View style={s.top}><View><Text style={s.brand}>ROUTEGO</Text><Text style={s.valid}>PASE ACTIVO</Text></View><Ionicons name="shield-checkmark-outline" size={30} color="#D6D8CF" /></View><Text style={s.student}>Sofía Martínez</Text><Text style={s.id}>ST-202688 · Ingeniería de Sistemas</Text><View style={s.code}><Ionicons name="qr-code" size={105} color="#292A27" /></View><Text style={s.scan}>Presenta este código al abordar</Text></View><View style={s.notice}><Ionicons name="leaf-outline" size={22} color="#596D53" /><Text style={s.noticeText}>Este mes evitaste aproximadamente 4.2 kg de CO₂ usando el shuttle.</Text></View></View>; }
-const s = StyleSheet.create({ screen: { flex: 1, padding: 20, paddingTop: 58, backgroundColor: '#F7F7F4' }, eyebrow: { color: '#6B7864', fontSize: 10, letterSpacing: 1, fontWeight: '800' }, title: { fontSize: 27, fontWeight: '700', color: '#292A27', marginTop: 5, marginBottom: 22 }, pass: { backgroundColor: '#343630', borderRadius: 21, padding: 22 }, top: { flexDirection: 'row', justifyContent: 'space-between' }, brand: { color: '#F6F5F0', fontSize: 18, fontWeight: '900', letterSpacing: 1 }, valid: { color: '#BDC5B8', marginTop: 5, fontSize: 10, fontWeight: '800' }, student: { color: '#F6F5F0', fontSize: 22, fontWeight: '700', marginTop: 29 }, id: { color: '#CED2C9', fontSize: 12, marginTop: 4 }, code: { backgroundColor: '#F8F7F3', alignSelf: 'center', marginTop: 24, borderRadius: 14, padding: 12 }, scan: { color: '#CED2C9', textAlign: 'center', marginTop: 12, fontSize: 11 }, notice: { marginTop: 22, padding: 15, backgroundColor: '#E6E9E2', borderRadius: 14, flexDirection: 'row', gap: 10, alignItems: 'center' }, noticeText: { flex: 1, color: '#53634E', lineHeight: 18, fontSize: 12 } });
+
+export default function PassScreen() {
+  return (
+    <View style={styles.screen}>
+      <View style={styles.card}>
+        <Text style={styles.eyebrow}>Mi pase digital</Text>
+        <Text style={styles.title}>RutaGo Pro</Text>
+
+        <View style={styles.codeBox}>
+          <Text style={styles.code}>RGO-8421</Text>
+        </View>
+
+        <View style={styles.row}>
+          <View>
+            <Text style={styles.label}>Vigencia</Text>
+            <Text style={styles.value}>30 días</Text>
+          </View>
+          <View>
+            <Text style={styles.label}>Saldo</Text>
+            <Text style={styles.value}>$18.50</Text>
+          </View>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Último uso</Text>
+          <Text style={styles.infoValue}>Hoy, 08:20</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#f5f7fb',
+    padding: 20,
+    justifyContent: 'center',
+  },
+  card: {
+    backgroundColor: '#121a2b',
+    borderRadius: 26,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  eyebrow: {
+    color: '#d7dff2',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  title: {
+    marginTop: 8,
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: '800',
+  },
+  codeBox: {
+    marginTop: 22,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: 'center',
+  },
+  code: {
+    color: '#121a2b',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 2,
+  },
+  row: {
+    marginTop: 22,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  label: {
+    color: '#d7dff2',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  value: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '800',
+    marginTop: 6,
+  },
+  infoRow: {
+    marginTop: 22,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#2c3347',
+    paddingTop: 16,
+  },
+  infoLabel: {
+    color: '#d7dff2',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  infoValue: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+});
