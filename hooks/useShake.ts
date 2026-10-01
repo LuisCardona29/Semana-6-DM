@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { Accelerometer } from 'expo-sensors';
+import { useEffect, useRef, useState } from 'react';
 
 type ShakeOptions = {
   threshold?: number;
@@ -23,12 +23,17 @@ export function useShake(
     let lastShakeAt = 0;
     let subscription: ReturnType<typeof Accelerometer.addListener> | null = null;
 
-    async function subscribe() {
+    async function subscribe(): Promise<void> {
       try {
         const available = await Accelerometer.isAvailableAsync();
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
+
         setIsAvailable(available);
-        if (!available) return;
+        if (!available) {
+          return;
+        }
 
         Accelerometer.setUpdateInterval(100);
         subscription = Accelerometer.addListener(({ x, y, z }) => {
@@ -40,11 +45,14 @@ export function useShake(
           }
         });
       } catch {
-        if (!cancelled) setIsAvailable(false);
+        if (!cancelled) {
+          setIsAvailable(false);
+        }
       }
     }
 
     void subscribe();
+
     return () => {
       cancelled = true;
       subscription?.remove();

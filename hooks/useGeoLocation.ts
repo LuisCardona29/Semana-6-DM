@@ -1,37 +1,63 @@
-import { useCallback, useEffect, useState } from 'react';
 import * as Location from 'expo-location';
+import { useCallback, useEffect, useState } from 'react';
+import { Linking } from 'react-native';
 
 import type { GeoCoords } from '@/contexts/GeoPhotosContext';
 
-export function useGeoLocation(active = true) {
+export type PermissionRequestState = 'undetermined' | 'granted' | 'denied' | 'blocked';
+
+export type UseGeoLocationResult = {
+  permission: Location.LocationPermissionResponse | null;
+  coords: GeoCoords | null;
+  error: string | null;
+  loading: boolean;
+  status: PermissionRequestState;
+  requestPermission: () => Promise<Location.LocationPermissionResponse | null>;
+  openSettings: () => Promise<void>;
+};
+
+export function useGeoLocation(active = true): UseGeoLocationResult {
   const [permission, setPermission] = useState<Location.LocationPermissionResponse | null>(null);
   const [coords, setCoords] = useState<GeoCoords | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const status: PermissionRequestState = permission
+    ? permission.granted
+      ? 'granted'
+      : permission.canAskAgain
+        ? 'denied'
+        : 'blocked'
+    : 'undetermined';
 
-    Location.getForegroundPermissionsAsync()
-      .then((response) => {
-        if (!cancelled) setPermission(response);
-      })
-      .catch((reason: unknown) => {
-        if (!cancelled) setError(reason instanceof Error ? reason.message : 'No se pudo consultar el permiso de ubicación.');
-      });
+  const refreshPermission = useCallback(async (): Promise<void> => {
+    try {
+      const response = await Location.getForegroundPermissionsAsync();
+      setPermission(response);
 
-    return () => {
-      cancelled = true;
-    };
+      if (!response.granted && !response.canAskAgain) {
+        setError('La ubicación está bloqueada. Abre Ajustes para activarla.');
+      }
+    } catch (reason: unknown) {
+      const message = reason instanceof Error ? reason.message : 'No se pudo consultar el permiso de ubicación.';
+      setError(message);
+    }
   }, []);
 
-  const requestPermission = useCallback(async () => {
+  const requestPermission = useCallback(async (): Promise<Location.LocationPermissionResponse | null> => {
     setLoading(true);
     setError(null);
+
     try {
       const response = await Location.requestForegroundPermissionsAsync();
       setPermission(response);
-      if (!response.granted) setError('Sin ubicación: puedes seguir usando la cámara.');
+
+      if (!response.granted && !response.canAskAgain) {
+        setError('La ubicación está bloqueada. Abre Ajustes para permitirla.');
+      } else if (!response.granted) {
+        setError('No se concedió la ubicación. La cámara sigue funcionando y la app lo comunica.');
+      }
+
       return response;
     } catch (reason: unknown) {
       const message = reason instanceof Error ? reason.message : 'No se pudo solicitar la ubicación.';
@@ -42,13 +68,23 @@ export function useGeoLocation(active = true) {
     }
   }, []);
 
+  const openSettings = useCallback(async (): Promise<void> => {
+    await Linking.openSettings();
+  }, []);
+
   useEffect(() => {
-    if (!active || !permission?.granted) return;
+    void refreshPermission();
+  }, [refreshPermission]);
+
+  useEffect(() => {
+    if (!active || !permission?.granted) {
+      return;
+    }
 
     let cancelled = false;
     let subscription: Location.LocationSubscription | null = null;
 
-    Location.watchPositionAsync(
+    void Location.watchPositionAsync(
       { accuracy: Location.Accuracy.Balanced, timeInterval: 3000, distanceInterval: 5 },
       (location) => {
         if (!cancelled) {
@@ -69,15 +105,25 @@ export function useGeoLocation(active = true) {
         }
       })
       .catch((reason: unknown) => {
-        if (!cancelled) setError(reason instanceof Error ? reason.message : 'No se pudo iniciar el GPS.');
+        if (!cancelled) {
+          const message = reason instanceof Error ? reason.message : 'No se pudo iniciar el GPS.';
+          setError(message);
+        }
       });
 
     return () => {
       cancelled = true;
       subscription?.remove();
-      console.log('[useGeoLocation] GPS detenido: pantalla sin foco o desmontada.');
     };
   }, [active, permission?.granted]);
 
-  return { permission, coords, error, loading, requestPermission };
+  return {
+    permission,
+    coords,
+    error,
+    loading,
+    status,
+    requestPermission,
+    openSettings,
+  };
 }
